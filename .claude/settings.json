@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"\nimport json,os\np='memory.md'\nif os.path.isfile(p):\n    content=open(p,encoding='utf-8').read()\n    print(json.dumps({'hookSpecificOutput':{'hookEventName':'SessionStart','additionalContext':'Project memory (memory.md):\\n\\n'+content}}))\nelse:\n    print('{}')\n\"",
+            "statusMessage": "memory.md wird geladen..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"$(git rev-parse --show-toplevel 2>/dev/null)\" 2>/dev/null || exit 0; changed=$(git status --porcelain 2>/dev/null); [ -z \"$changed\" ] && exit 0; other=$(echo \"$changed\" | grep -v \"memory.md\"); mem=$(echo \"$changed\" | grep \"memory.md\"); if [ -n \"$other\" ] && [ -z \"$mem\" ]; then python3 -c \"import json; print(json.dumps({'decision':'block','reason':'Es gibt uncommittete Aenderungen im Projekt, aber memory.md wurde in dieser Antwort nicht aktualisiert. Bitte memory.md (Status, zuletzt erledigt, offene Punkte) vor dem Abschluss aktualisieren. Bei groesseren Aenderungen auch CHANGELOG.md ergaenzen.'}))\"; fi",
+            "statusMessage": "Pruefe, ob memory.md aktuell ist..."
+          }
+        ]
+      }
+    ]
+  }
+}
