@@ -35,6 +35,7 @@ Dieses File ist das Gedächtnis für die Weiterarbeit an diesem Projekt. Vor dem
   - **Kompletter Flow live end-to-end getestet** gegen eine temporäre lokale Postgres-Instanz + laufenden Server: Register, Duplikat-Schutz (409), Login (richtig/falsch/gesperrt), `/me`, Präferenzen-Update, Logout, kompletter Passwort-Reset-Flow inkl. Einmalverwendung des Tokens, Sperren eines Users wirkt sofort auch bei bestehendem Cookie, Self-Delete inkl. Audit-Log-Persistenz, Admin-Seed + Admin-Login, Rate-Limit greift nach 20 Requests.
   - README um Auth-API-Tabelle und Admin-Seed-Anleitung ergänzt.
   - Issue #2 auf GitHub kommentiert, Checkliste abgehakt, geschlossen.
+- 2026-07-29: `CLAUDE.md` deutlich ausgebaut (war seit Projektstart nur generisches Grundgerüst): Projektüberblick, GitHub-Issue-Workflow (PAT-Nutzung, Abhaken/Kommentieren/Schließen), Vorgehen zum Testen ohne Docker (temporäre lokale Postgres-Instanz), Verweis auf `bypassPermissions`.
 
 ## Offen / nächste Schritte
 

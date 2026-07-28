@@ -25,3 +25,6 @@ Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
   - Self-Service-Kontolöschung (`DELETE /api/users/me`, DSGVO-Löschungsrecht) inkl. Merkliste.
   - Admin-Seed-Script (`npm run seed:admin`).
   - Unit-Tests für Hashing/JWT/Validierung.
+
+### Changed
+- `CLAUDE.md` um projektspezifische Arbeitsanweisungen erweitert: Issue-Workflow über die GitHub-API (PAT statt `gh` CLI), Vorgehen zum Testen ohne lokal installiertes Docker (temporäre isolierte Postgres-Instanz).
