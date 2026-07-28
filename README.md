@@ -43,7 +43,30 @@ npm run dev
 
 ### Ersten Admin-Account anlegen
 
-Noch nicht implementiert (folgt in Issue #2) – geplant als Seed-Script/Env-Var-Mechanismus über `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD` in `.env`, damit niemand sich über die normale Registrierung selbst zum Admin machen kann.
+`SEED_ADMIN_EMAIL` und `SEED_ADMIN_PASSWORD` in `.env` setzen, dann im `backend/`-Ordner:
+
+```
+npm run seed:admin
+```
+
+Legt den Account als `admin` an bzw. befördert einen bestehenden User mit dieser E-Mail zu `admin`. Es gibt keinen Weg, sich über die normale Registrierung selbst zum Admin zu machen.
+
+## Auth-API (Issue #2)
+
+Authentifizierung läuft über ein JWT in einem httpOnly-Cookie (kein Zugriff per JS, daher kein Speichern im Frontend nötig).
+
+| Endpunkt | Beschreibung |
+|---|---|
+| `POST /api/auth/register` | `{ email, password, preferences? }` |
+| `POST /api/auth/login` | `{ email, password }` |
+| `POST /api/auth/logout` | löscht das Auth-Cookie |
+| `POST /api/auth/forgot-password` | `{ email }` – immer generische Antwort (kein E-Mail-Enumeration) |
+| `POST /api/auth/reset-password` | `{ token, password }` |
+| `GET /api/users/me` | angemeldeter User |
+| `PATCH /api/users/me` | `{ preferences }` |
+| `DELETE /api/users/me` | Self-Service-Kontolöschung (DSGVO), hart, inkl. Merkliste |
+
+Passwörter werden mit bcrypt gehasht (12 Rounds), Login/Registrierung/Passwort-Reset sind rate-limitiert (20 Requests/15 min pro IP). Ein echter E-Mail-Versand für den Passwort-Reset-Link ist noch nicht angebunden – der Link wird aktuell auf der Backend-Konsole geloggt.
 
 ## Projektstruktur
 
