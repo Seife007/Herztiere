@@ -21,6 +21,47 @@ Der Inhalt von `memory.md` wird bei jeder Session automatisch per Hook in den Ko
 - Wenn ein Issue vollständig abgearbeitet ist: Checkboxen im Issue-Body per PATCH auf `- [x]` setzen, einen zusammenfassenden Kommentar posten (was wurde gemacht, was ist offen/out of scope), dann das Issue schließen (`PATCH .../issues/{n}` mit `{"state":"closed","state_reason":"completed"}`).
 - Größere Issues (Auth, Crawler, Frontend, Admin) einzeln vollständig abarbeiten (inkl. Recherche/Tests/Doku) statt mehrere parallel oberflächlich anzufangen – spätere Issues bauen aufeinander auf, falsche Grundannahmen früh sind teuer zu korrigieren.
 
+## Issue-Pflicht: erst Issue, dann Umsetzung
+
+Für **jede** Änderung an diesem Projekt (Feature, Bugfix, Refactoring, Chore – unabhängig von der Größe) muss zuerst ein GitHub-Issue in `Seife007/Herztiere` angelegt werden. Erst wenn das Issue existiert, darf das Problem/Feature angegangen werden – auch wenn der Nutzer eine Änderung direkt im Chat beauftragt: zuerst das Issue anlegen, dann umsetzen. Einzige Ausnahme: reine Pflege von `memory.md`/`CHANGELOG.md` im Rahmen eines bereits bestehenden, dafür angelegten Issues braucht kein zusätzliches eigenes Issue.
+
+### Professionelles Schema für neue Issues
+
+**Titel:** kurz, konkret, ohne Nummer (vergibt GitHub automatisch), z. B. „Rate-Limit für /api/animals ergänzen" oder „Bug: Sync bricht bei leerem Feed ab".
+
+**Body**, angelehnt an die bestehenden Issues #1–#7:
+
+```markdown
+## Ziel
+<1–3 Sätze: was soll erreicht bzw. welches Problem behoben werden, und warum>
+
+## Aufgaben
+- [ ] <konkreter, einzeln prüfbarer Schritt>
+- [ ] <...>
+
+## Abhängigkeit
+<nur falls vorhanden, z. B. "Baut auf Issue #N auf." – Abschnitt sonst weglassen>
+```
+
+Bei Bugs zusätzlich, direkt vor `## Aufgaben`:
+
+```markdown
+## Fehlerbeschreibung
+<Beobachtetes vs. erwartetes Verhalten, Reproduktionsschritte falls bekannt>
+```
+
+**Labels:** mindestens ein passendes aus der bestehenden Liste setzen – Bereich (`backend`, `frontend`, `admin`, `auth`, `crawler`, `legal`, `testing`, `docs`, `setup`) plus Art (`bug` oder `enhancement`). Aktuelle Liste: `GET /repos/Seife007/Herztiere/labels`.
+
+**Anlegen per API:**
+
+```bash
+curl -X POST -H "Authorization: Bearer $(cat ~/.herztiere-github-token)" -H "Accept: application/vnd.github+json" \
+  https://api.github.com/repos/Seife007/Herztiere/issues \
+  -d '{"title": "...", "body": "...", "labels": ["backend", "enhancement"]}'
+```
+
+Danach wie im nächsten Abschnitt beschrieben abarbeiten (Checkboxen abhaken, zusammenfassender Kommentar, schließen).
+
 ## Testen ohne Docker
 
 Docker ist auf diesem Entwicklungssystem **nicht installiert**. `docker-compose.yml` ist daher nur inhaltlich erstellt, nie tatsächlich mit `docker compose up` durchprobiert (siehe "Bekannte Probleme" in memory.md) – vor Issue #6 auf einer Maschine mit Docker verifizieren.
@@ -41,6 +82,18 @@ rm -rf "$DATADIR"
 ```
 
 Nach jedem Test-Durchlauf aufräumen (Prozesse beenden, `$DATADIR` löschen, Scratch-Dateien entfernen). Dieses Vorgehen wurde für Issue #1 (Migration) und Issue #2 (kompletter Auth-Flow: Register/Login/Reset/Self-Delete/Rate-Limit) erfolgreich genutzt.
+
+## Unit-Tests
+
+Für alle wichtigen/nicht-trivialen Teile Unit-Tests ergänzen (vitest, sowohl `backend/` als auch `frontend/` – `npm test` in beiden Ordnern). "Wichtig" heißt insbesondere:
+
+- Business-/Sicherheitsregeln (z. B. Merge-Logik gegen Admin-Overrides, Schutz des letzten Admins vor Selbst-Degradierung)
+- Validierung (zod-Schemas: gültige/ungültige Eingaben, Defaults, Coercion)
+- Reine Hilfsfunktionen, auch im Frontend (`frontend/src/lib/*.ts`, z. B. Label-/Datums-Formatierung)
+
+Reine, DB-/IO-freie Logik bei Bedarf aus Routen/Services herausziehen, damit sie ohne Postgres testbar ist (Vorbild: `computeSyncPlan` in `syncPlan.ts`, `blocksLastAdminDemotion` in `services/users.ts`, `resolveAnimal` in `services/animals.ts`). Reine DB-Abfragen/-Schreiboperationen selbst nicht mocken, sondern wie in "Testen ohne Docker" beschrieben live gegen eine temporäre Postgres-Instanz end-to-end verifizieren – Unit-Tests ersetzen das nicht, sondern ergänzen es für die Logik, die sich sauber isolieren lässt.
+
+Nach `npm run build` im Backend landen kompilierte Tests unter `dist/` – `backend/vitest.config.ts` schließt `dist/` deshalb explizit aus, sonst zählt `npm test` jeden Test doppelt.
 
 ## Pflege von memory.md
 

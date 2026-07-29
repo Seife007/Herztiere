@@ -85,6 +85,17 @@ export function Layout({ children }: { children: ReactNode }) {
           </a>
           . herztiere vermittelt selbst keine Tiere – Kontaktaufnahme erfolgt über die jeweils zuständige Stelle.
         </p>
+        <nav className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+          <Link to="/impressum" className="underline hover:text-coral-500">
+            Impressum
+          </Link>
+          <Link to="/datenschutz" className="underline hover:text-coral-500">
+            Datenschutz
+          </Link>
+          <Link to="/nutzungsbedingungen" className="underline hover:text-coral-500">
+            Nutzungsbedingungen
+          </Link>
+        </nav>
       </footer>
     </div>
   )

@@ -41,6 +41,25 @@ npm install
 npm run dev
 ```
 
+### Umgebungsvariablen
+
+Alle Variablen liegen mit Erklärung als Kommentar auch direkt in [`.env.example`](./.env.example). Kurzübersicht:
+
+| Variable | Bedeutung |
+|---|---|
+| `POSTGRES_USER`/`POSTGRES_PASSWORD`/`POSTGRES_DB`/`POSTGRES_PORT` | Zugangsdaten für den Postgres-Container (nur relevant, wenn `db` per docker-compose läuft) |
+| `DATABASE_URL` | Connection-String des Backends zur DB – bei lokaler Ausführung ohne Docker `localhost`, innerhalb von docker-compose der Servicename `db` |
+| `PORT` | Port, auf dem das Backend lauscht (Default `3000`) |
+| `CORS_ORIGIN` | Kommagetrennte Liste erlaubter Frontend-Origins |
+| `JWT_SECRET` | Signierschlüssel für die Auth-JWTs im httpOnly-Cookie – muss ein langer, zufälliger String sein |
+| `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD` | E-Mail/Passwort für `npm run seed:admin` (siehe unten) |
+| `PASSWORD_RESET_TOKEN_TTL_MINUTES` | Gültigkeitsdauer eines "Passwort vergessen"-Links in Minuten |
+| `FRONTEND_URL` | Basis-URL des Frontends, wird für den Link in der (aktuell nur geloggten) Reset-Mail verwendet |
+| `FUNDTIERE_FEED_URL`/`FUNDTIERE_IMAGE_BASE_URL` | RSS-Feed-URL bzw. Basis-URL für Bild-Pfade der Datenquelle (siehe `docs/data-source.md`) |
+| `SYNC_USER_AGENT` | User-Agent-Header beim Abruf von Feed/Bildern (Kontakt-Mailadresse für die Quelle) |
+| `IMAGE_STORAGE_DIR` | Verzeichnis für lokal gecachte Tier-Thumbnails, relativ zum Arbeitsverzeichnis des Backend-Prozesses |
+| `VITE_API_URL` | Backend-URL, gegen die das Frontend Requests schickt |
+
 ### Ersten Admin-Account anlegen
 
 `SEED_ADMIN_EMAIL` und `SEED_ADMIN_PASSWORD` in `.env` setzen, dann im `backend/`-Ordner:
@@ -50,6 +69,15 @@ npm run seed:admin
 ```
 
 Legt den Account als `admin` an bzw. befördert einen bestehenden User mit dieser E-Mail zu `admin`. Es gibt keinen Weg, sich über die normale Registrierung selbst zum Admin zu machen.
+
+### Tests
+
+```
+cd backend && npm test    # vitest, u. a. Business-/Sicherheitsregeln (z. B. Override-Merge, Schutz des letzten Admins) und Validierung
+cd frontend && npm test   # vitest, reine Hilfsfunktionen (z. B. Label-/Datumsformatierung)
+```
+
+Unit-Tests decken bewusst nur DB-/IO-freie Logik ab. Echte End-to-End-Flows (Migrationen, API, Browser) werden stattdessen live gegen eine temporäre lokale Postgres-Instanz getestet, siehe `CLAUDE.md`.
 
 ## Auth-API (Issue #2)
 
@@ -64,6 +92,7 @@ Authentifizierung läuft über ein JWT in einem httpOnly-Cookie (kein Zugriff pe
 | `POST /api/auth/reset-password` | `{ token, password }` |
 | `GET /api/users/me` | angemeldeter User |
 | `PATCH /api/users/me` | `{ preferences }` |
+| `GET /api/users/me/export` | DSGVO-Datenexport (Art. 15/20): Konto + Merkliste als JSON, siehe Issue #7 |
 | `DELETE /api/users/me` | Self-Service-Kontolöschung (DSGVO), hart, inkl. Merkliste |
 
 Passwörter werden mit bcrypt gehasht (12 Rounds), Login/Registrierung/Passwort-Reset sind rate-limitiert (20 Requests/15 min pro IP). Ein echter E-Mail-Versand für den Passwort-Reset-Link ist noch nicht angebunden – der Link wird aktuell auf der Backend-Konsole geloggt.
@@ -115,6 +144,17 @@ Geschützt unter `/admin` (nur `role = admin`, sonst Hinweis "Kein Zugriff"), ei
 | `POST /api/admin/sync` | Manueller Sync-Trigger (bereits aus Issue #3) |
 
 Sicherheitsrelevante Aktionen (Sperren/Entsperren, Rolle ändern, Löschen, Passwort-Reset, Tier-Override) werden in `audit_log` protokolliert. Die Schutzregel gegen die Selbst-Degradierung des letzten Admins ist als reine Funktion (`blocksLastAdminDemotion`) unit-getestet.
+
+## Rechtliches (Issue #7)
+
+⚠️ **Keine Rechtsberatung.** Die folgenden Seiten schaffen die technische/strukturelle Grundlage, ersetzen aber keine anwaltliche Prüfung vor dem produktiven Betrieb – siehe der Hinweis-Kasten auf der jeweiligen Seite selbst.
+
+- **[`/impressum`](frontend/src/routes/Impressum.tsx)**: Enthält bewusst nur Platzhalter (Betreiber:in, Adresse, Kontakt, UID) – vor dem Live-Betrieb mit echten Angaben befüllen.
+- **[`/datenschutz`](frontend/src/routes/Datenschutz.tsx)**: Beschreibt die tatsächliche Datenverarbeitung (welche Daten, Zweck, Speicherdauer, Empfänger, Cookies) auf Basis des echten Datenmodells.
+- **[`/nutzungsbedingungen`](frontend/src/routes/Nutzungsbedingungen.tsx)**: Stellt klar, dass herztiere selbst keine Tiere vermittelt, sondern nur offene Daten anzeigt; Kontaktaufnahme läuft über die zuständige Stelle.
+- Alle drei Seiten sind im Footer verlinkt (öffentlicher und registrierter Bereich).
+- **DSGVO-Betroffenenrechte:** Löschung über die Self-Service-Kontolöschung (Issue #2), Auskunft/Datenübertragbarkeit über den Datenexport-Button im Kontobereich (`GET /api/users/me/export`), weitere Rechte (Berichtigung, Widerspruch, Beschwerde) sind in der Datenschutzerklärung mit Kontaktweg beschrieben.
+- **Cookie-Consent:** Bewusst kein Banner eingebaut – die App setzt ausschließlich ein technisch notwendiges httpOnly-Auth-Cookie, keine Analytics/Tracking-Cookies. Bei Änderung dieser Cookie-Nutzung (z. B. Analytics) muss diese Einschätzung neu geprüft werden.
 
 ## Projektstruktur
 

@@ -53,7 +53,7 @@ const OVERRIDABLE_FIELDS: (keyof Animal)[] = [
   'status',
 ]
 
-function resolveAnimal(row: AnimalRow, isLiked: boolean): Animal {
+export function resolveAnimal(row: AnimalRow, isLiked: boolean): Animal {
   const { overrides, ...animal } = row
   for (const field of OVERRIDABLE_FIELDS) {
     if (overrides && Object.prototype.hasOwnProperty.call(overrides, field)) {
@@ -98,6 +98,26 @@ export async function findLikedAnimals(userId: string): Promise<Animal[]> {
     [userId],
   )
   return rows.map((row) => resolveAnimal(row, true))
+}
+
+export interface LikeExportEntry {
+  animalId: string
+  title: string
+  likedAt: string
+}
+
+// Schlanker Auszug für den DSGVO-Datenexport (Issue #7, Art. 15/20 DSGVO):
+// nur die für den Export relevanten Felder, keine vollständigen Tierdaten
+// (die stammen ohnehin aus der offenen Datenquelle, nicht vom Nutzer).
+export async function findLikesForExport(userId: string): Promise<LikeExportEntry[]> {
+  const { rows } = await pool.query<LikeExportEntry>(
+    `SELECT animals.id AS "animalId", animals.title, likes.created_at AS "likedAt"
+     FROM likes JOIN animals ON animals.id = likes.animal_id
+     WHERE likes.user_id = $1
+     ORDER BY likes.created_at DESC`,
+    [userId],
+  )
+  return rows
 }
 
 export async function likeAnimal(userId: string, animalId: string): Promise<void> {

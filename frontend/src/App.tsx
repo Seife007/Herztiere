@@ -12,6 +12,9 @@ import { Swipe } from './routes/Swipe'
 import { Wishlist } from './routes/Wishlist'
 import { AnimalDetail } from './routes/AnimalDetail'
 import { Account } from './routes/Account'
+import { Impressum } from './routes/Impressum'
+import { Datenschutz } from './routes/Datenschutz'
+import { Nutzungsbedingungen } from './routes/Nutzungsbedingungen'
 import { AdminUsers } from './routes/admin/AdminUsers'
 import { AdminUserDetail } from './routes/admin/AdminUserDetail'
 import { AdminAnimals } from './routes/admin/AdminAnimals'
@@ -67,6 +70,9 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/impressum" element={<Impressum />} />
+        <Route path="/datenschutz" element={<Datenschutz />} />
+        <Route path="/nutzungsbedingungen" element={<Nutzungsbedingungen />} />
       </Route>
 
       <Route

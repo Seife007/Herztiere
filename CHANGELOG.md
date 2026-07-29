@@ -48,6 +48,18 @@ Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
   - Audit-Log-Einträge für alle sicherheitsrelevanten Aktionen (Sperren/Entsperren, Rolle ändern, Löschen, Passwort-Reset-Trigger, Tier-Override).
   - Frontend: Eigener geschützter Bereich `/admin` (nur `role = admin`) mit schlichtem, vom öffentlichen Design unabhängigem Dashboard-Layout, Nutzer- und Tierverwaltung, Sync-Übersicht mit manuellem Trigger.
   - Live-E2E-Test (Playwright + System-Chromium) gegen temporäre Postgres-Instanz + laufendes Frontend/Backend: Zugriffsschutz, Nutzerliste/-suche, Sperren/Entsperren, Passwort-Reset-Trigger, Schutz des letzten Admins (blockiert bei 1 Admin, erlaubt bei 2), Löschen mit Bestätigungsdialog, Tierliste/-filter, Override-Bearbeitung inkl. Persistenz nach Reload, manuelles Ausblenden, Sync-Übersicht + manueller Trigger.
+- Zusätzliche Unit-Test-Abdeckung: `resolveAnimal`-Override-Merge und alle Admin-zod-Schemas im Backend; erstmals vitest im Frontend eingerichtet mit Tests für die Label-/Formatierungs-Hilfsfunktionen (`lib/animalLabels.ts`) und `resolveImageUrl` (`lib/api.ts`).
+- Issue #6 (Integration, E2E-Tests & README):
+  - Public-Flow (Landing → Registrierung → Swipe → Merkliste → Tierdetail → Konto) und Admin-Flow (Zugriffsschutz → Nutzerverwaltung → Tierverwaltung → manueller Sync-Trigger) erneut live end-to-end verifiziert, insbesondere nach dem Routing-Umbau (`PublicLayout`/`AdminLayout`) aus Issue #5 – keine Regression.
+  - README um Abschnitt "Umgebungsvariablen" mit Tabelle aller `.env.example`-Variablen ergänzt.
+- Issue #7 (Rechtliches: Impressum, Datenschutzerklärung & DSGVO-Konformität):
+  - Neue Seiten `/impressum` (Platzhalter-Angaben, klar als solche markiert), `/datenschutz` (Datenverarbeitung/Zweck/Speicherdauer/Empfänger/Cookies/Betroffenenrechte auf Basis des echten Datenmodells) und `/nutzungsbedingungen` (Disclaimer: keine eigene Tiervermittlung), verlinkt im Footer (öffentlicher und registrierter Bereich).
+  - DSGVO-Datenexport: `GET /api/users/me/export` liefert Konto- und Merklisten-Daten als JSON, im Kontobereich per Button als Datei herunterladbar (Auskunftsrecht + Datenübertragbarkeit, Art. 15/20 DSGVO).
+  - Bewusste Entscheidung gegen einen Cookie-Consent-Banner dokumentiert (nur ein technisch notwendiges Auth-Cookie, keine Analytics/Tracking).
+  - Live-E2E-Test: Footer-Links (eingeloggt/nicht eingeloggt), alle drei neuen Seiten erreichbar, Datenexport-Download mit korrektem Inhalt.
 
 ### Changed
-- `CLAUDE.md` um projektspezifische Arbeitsanweisungen erweitert: Issue-Workflow über die GitHub-API (PAT statt `gh` CLI), Vorgehen zum Testen ohne lokal installiertes Docker (temporäre isolierte Postgres-Instanz).
+- `CLAUDE.md` um projektspezifische Arbeitsanweisungen erweitert: Issue-Workflow über die GitHub-API (PAT statt `gh` CLI), Vorgehen zum Testen ohne lokal installiertes Docker (temporäre isolierte Postgres-Instanz), Pflicht zu Unit-Tests für wichtige/nicht-triviale Logik (Backend und Frontend).
+
+### Fixed
+- Backend-`npm test` zählte nach einem lokalen `npm run build` jeden Test doppelt, weil vitest ohne Exclude-Config auch die nach `dist/` kompilierten Test-Dateien ausführte (`backend/vitest.config.ts` ergänzt).

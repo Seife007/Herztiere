@@ -4,7 +4,7 @@ import { requireAuth } from '../middleware/auth.js'
 import { updatePreferencesSchema } from '../validation/auth.js'
 import { logAudit } from '../services/audit.js'
 import { findUserById } from '../services/users.js'
-import { findLikedAnimals } from '../services/animals.js'
+import { findLikedAnimals, findLikesForExport } from '../services/animals.js'
 import { AUTH_COOKIE_NAME } from '../services/jwt.js'
 
 export const usersRouter = Router()
@@ -31,6 +31,23 @@ usersRouter.patch('/me', async (req, res) => {
 
 usersRouter.get('/me/likes', async (req, res) => {
   res.json({ animals: await findLikedAnimals(req.user!.id) })
+})
+
+// DSGVO-Datenexport (Art. 15 Auskunftsrecht, Art. 20 Datenübertragbarkeit,
+// siehe Issue #7): alle personenbezogenen Daten des angemeldeten Users als
+// maschinenlesbares JSON, keine Anmeldedaten (Passwort-Hash) enthalten.
+usersRouter.get('/me/export', async (req, res) => {
+  const user = req.user!
+  res.json({
+    exportedAt: new Date().toISOString(),
+    account: {
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt,
+      preferences: user.preferences,
+    },
+    likes: await findLikesForExport(user.id),
+  })
 })
 
 // Self-Service-Löschung (DSGVO-Löschungsrecht, siehe Issue #7). Harter Delete,

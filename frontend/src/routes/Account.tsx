@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { TextField } from '../components/TextField'
+import { api } from '../lib/api'
 
 const SPECIES_OPTIONS = [
   { value: '01_Hunde', label: '🐶 Hunde' },
@@ -28,6 +29,7 @@ export function Account() {
 
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
 
   if (!user) return null
 
@@ -48,6 +50,24 @@ export function Account() {
     setIsDeleting(true)
     await deleteAccount()
     navigate('/')
+  }
+
+  // DSGVO-Datenexport (Art. 15/20, siehe Issue #7): lädt die eigenen Daten
+  // als JSON-Datei herunter, statt sie nur im Browser anzuzeigen.
+  async function handleExport() {
+    setIsExporting(true)
+    try {
+      const data = await api.get('/api/users/me/export')
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = 'herztiere-daten.json'
+      link.click()
+      URL.revokeObjectURL(url)
+    } finally {
+      setIsExporting(false)
+    }
   }
 
   return (
@@ -113,6 +133,20 @@ export function Account() {
           className="mt-6 rounded-full bg-coral-500 px-6 py-2.5 font-semibold text-white shadow-sm hover:bg-coral-600 disabled:opacity-60"
         >
           {saveState === 'saving' ? 'Speichert …' : saveState === 'saved' ? 'Gespeichert ✓' : 'Änderungen speichern'}
+        </button>
+      </div>
+
+      <div className="mt-8 rounded-3xl bg-white p-6 shadow-md sm:p-8">
+        <h2 className="font-display text-xl font-bold text-stone-800">Deine Daten</h2>
+        <p className="mt-2 text-sm text-stone-600">
+          Lade eine Kopie deiner bei uns gespeicherten Daten (Konto, Präferenzen, Merkliste) als JSON-Datei herunter.
+        </p>
+        <button
+          onClick={handleExport}
+          disabled={isExporting}
+          className="mt-4 rounded-full border-2 border-stone-200 px-6 py-2.5 font-semibold text-stone-700 hover:border-coral-300 disabled:opacity-60"
+        >
+          {isExporting ? 'Wird erstellt …' : 'Daten exportieren'}
         </button>
       </div>
 
