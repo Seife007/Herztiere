@@ -1,4 +1,11 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
+// Standardmäßig leer (= relative Pfade wie `/api/...`), damit Requests immer
+// an denselben Host/Port gehen, über den die Seite selbst geladen wurde -
+// funktioniert dadurch unabhängig von der jeweiligen IP/dem Hostnamen
+// (LAN, localhost, öffentliche IP per Portweiterleitung, ...), siehe
+// `vite.config.ts` für den zugehörigen /api-Proxy zum Backend (Issue #12).
+// `VITE_API_URL` bleibt als expliziter Override möglich, falls Frontend und
+// Backend ausnahmsweise ohne gemeinsamen Proxy auf getrennten Hosts laufen.
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? ''
 
 export class ApiError extends Error {
   status: number

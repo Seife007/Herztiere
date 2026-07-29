@@ -45,6 +45,17 @@ Beobachtete Werte für `cal:organizer > vcard:fn` (= zuständige Stellen) in der
 - `TierQuarTier Wien, 1220 Wien, Süßenbrunner Straße 101`
 - `Zoo Forchtenstein, 1140 Wien`
 
+### Bildqualität (erneut geprüft, Issue #9, 2026-07-29)
+
+Erneute, vertiefte Recherche zur Thumbnail-Auflösung (358x240px, ~14 KB JPEG) bestätigt: es gibt **keine** höher aufgelöste Variante bei dieser Quelle.
+
+- Rohes RSS-`<item>` enthält kein weiteres Bild-Feld (kein `media:content`, kein `enclosure`) – nur das eine `media:thumbnail`.
+- Naheliegende Pfad-Varianten ohne `/Thumbnail/` (`Bild/<id>`, `Bild/Gross/<id>`, `Bild/Vollbild/<id>`, `Bild/Original/<id>`, `Bild/Full/<id>`, `Bild/Large/<id>`) liefern alle nur einen 302-Redirect, kein Bild.
+- Gängige Resize-Query-Parameter (`?width=`, `?w=`, `?size=large`, `?size=full`, `?quality=100`, `?scale=2`, `?original=true`, `?dl=1`) werden ignoriert, liefern byte-identisch dieselbe Thumbnail-Datei.
+- Response-Header verraten keinen dahinterliegenden Bildverarbeitungsdienst (nur generischer `Magistrat der Stadt Wien - Web Gateway`-Header); das Thumbnail selbst enthält keine EXIF-Daten.
+
+Da laut Projektvorgabe ausschließlich diese Quelle verwendet werden darf, ist eine höhere Auflösung nicht erreichbar. Auf Nutzerentscheidung wird das Thumbnail beim Caching serverseitig per Lanczos3-Filter um Faktor 2 hochskaliert (`backend/src/services/imageCache.ts`, `upscaleImage()`) – das erzeugt keine echten zusätzlichen Bilddetails, sondern reduziert nur sichtbare Pixelbildung auf großen Bildschirmen.
+
 ### Verhalten bei "verschwundenen" Einträgen
 
 Es gibt kein explizites Status-Feld im Feed. Ein Tier gilt als nicht mehr verfügbar, sobald sein `<guid>` in einem Sync-Lauf nicht mehr im Feed enthalten ist (Vermittlung, Fristablauf o. Ä.). Das entspricht genau der in Issue #3 geforderten Merge-Logik: nicht mehr vorhandene Einträge werden auf `status = 'removed'` gesetzt statt hart gelöscht (wegen bestehender Merklisten-Referenzen).

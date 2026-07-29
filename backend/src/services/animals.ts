@@ -65,15 +65,32 @@ export function resolveAnimal(row: AnimalRow, isLiked: boolean): Animal {
 
 // Tiere für den Swipe-Stapel: aktiv, nicht ausgeblendet, noch nicht von
 // diesem Nutzer geliked. Reihenfolge zufällig, damit der Stapel sich bei
-// jedem Aufruf unterscheidet.
-export async function findAnimalsForSwiping(userId: string, limit: number): Promise<Animal[]> {
+// jedem Aufruf unterscheidet. Ist mindestens eine Art-Präferenz gesetzt,
+// werden nur Tiere dieser Art(en) berücksichtigt (leeres Array = alle Arten,
+// Issue #8). Gefiltert wird nach der *aufgelösten* Kategorie (Admin-Override
+// aus Issue #5 hat Vorrang vor der vom Sync gespiegelten Basiskategorie),
+// damit das Ergebnis konsistent mit `resolveAnimal()` bleibt.
+export async function findAnimalsForSwiping(
+  userId: string,
+  limit: number,
+  speciesInterest: string[] = [],
+): Promise<Animal[]> {
+  const params: unknown[] = [userId]
+  let categoryFilter = ''
+  if (speciesInterest.length > 0) {
+    params.push(speciesInterest)
+    categoryFilter = `AND COALESCE(overrides->>'category', category) = ANY($${params.length})`
+  }
+  params.push(limit)
+
   const { rows } = await pool.query<AnimalRow>(
     `SELECT ${ANIMAL_COLUMNS} FROM animals
      WHERE status = 'active' AND is_hidden = false
        AND id NOT IN (SELECT animal_id FROM likes WHERE user_id = $1)
+       ${categoryFilter}
      ORDER BY random()
-     LIMIT $2`,
-    [userId, limit],
+     LIMIT $${params.length}`,
+    params,
   )
   return rows.map((row) => resolveAnimal(row, false))
 }

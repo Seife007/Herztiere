@@ -41,6 +41,21 @@ npm install
 npm run dev
 ```
 
+### Lokales HTTPS (optional, Issue #11)
+
+Standardmäßig läuft der Frontend-Dev-Server per HTTP. Für HTTPS (z. B. um auf dem Handy ohne "unsicher"-Warnung zu testen, oder für Browser-APIs, die einen sicheren Kontext verlangen):
+
+1. [`mkcert`](https://github.com/FiloSottile/mkcert) installieren.
+2. Lokale CA installieren: `mkcert -install` (fügt sie in den System-/Browser-Trust-Store ein – benötigt ggf. root bzw. `libnss3-tools`/`certutil` für Chrome/Firefox; ohne das erzeugt `mkcert` das Zertifikat trotzdem, Browser zeigen dann aber eine Zertifikatswarnung, bis die Root-CA manuell importiert wird, z. B. über `$(mkcert -CAROOT)/rootCA.pem`).
+3. Zertifikat erzeugen, gültig für alle Hosts, über die das Frontend erreichbar sein soll (mindestens `localhost`, bei Bedarf LAN-/Tailscale-IP ergänzen):
+   ```
+   mkdir -p frontend/certs
+   mkcert -cert-file frontend/certs/dev-cert.pem -key-file frontend/certs/dev-key.pem localhost 127.0.0.1 <weitere-IPs>
+   ```
+4. Frontend (neu) starten – `vite.config.ts` erkennt die Dateien automatisch und aktiviert HTTPS; ohne die Dateien läuft weiterhin HTTP. `frontend/certs/` ist gitignored (private Schlüssel, nie committen).
+
+Nur das Frontend braucht HTTPS: Der `/api`-Proxy zum Backend läuft weiterhin per HTTP, da dieser Hop serverseitig zwischen Vite und dem Backend stattfindet und den Browser nie erreicht (siehe Issue #12) – kein Mixed-Content-Problem.
+
 ### Umgebungsvariablen
 
 Alle Variablen liegen mit Erklärung als Kommentar auch direkt in [`.env.example`](./.env.example). Kurzübersicht:
@@ -58,7 +73,8 @@ Alle Variablen liegen mit Erklärung als Kommentar auch direkt in [`.env.example
 | `FUNDTIERE_FEED_URL`/`FUNDTIERE_IMAGE_BASE_URL` | RSS-Feed-URL bzw. Basis-URL für Bild-Pfade der Datenquelle (siehe `docs/data-source.md`) |
 | `SYNC_USER_AGENT` | User-Agent-Header beim Abruf von Feed/Bildern (Kontakt-Mailadresse für die Quelle) |
 | `IMAGE_STORAGE_DIR` | Verzeichnis für lokal gecachte Tier-Thumbnails, relativ zum Arbeitsverzeichnis des Backend-Prozesses |
-| `VITE_API_URL` | Backend-URL, gegen die das Frontend Requests schickt |
+| `VITE_API_URL` | Optionaler Override, falls Frontend und Backend ausnahmsweise ohne gemeinsamen Proxy auf getrennten Hosts laufen. Standardmäßig **nicht gesetzt** – das Frontend nutzt dann relative `/api/...`-Pfade, die vom Vite-Dev-Server-Proxy ans Backend weitergereicht werden (siehe `BACKEND_URL`) und funktioniert dadurch unabhängig davon, über welche IP/welchen Host es aufgerufen wird (Issue #12) |
+| `BACKEND_URL` | Ziel des Vite-Dev-Server-Proxys (`/api` → Backend), rein serverseitig, nie im Browser sichtbar. Lokal ohne Docker `http://localhost:3000`, innerhalb von docker-compose `http://backend:3000` |
 
 ### Ersten Admin-Account anlegen
 
@@ -103,7 +119,7 @@ Ein Scheduler (`node-cron`) synchronisiert die Datenbank 4x täglich (00/06/12/1
 
 - Neue Einträge werden angelegt, bestehende aktualisiert, im Feed nicht mehr vorhandene aktive Einträge auf `status = 'removed'` gesetzt (kein Hard-Delete, wegen bestehender Merklisten-Referenzen). Taucht ein zuvor entferntes Tier wieder auf, wird es reaktiviert; ein manuell auf `adopted` gesetztes Tier wird vom Sync nie automatisch verändert.
 - Admin-Anpassungen (`overrides`/`manually_edited`/`is_hidden`, Issue #5) werden von den Sync-Schreibzugriffen nie berührt.
-- Thumbnails werden heruntergeladen und lokal unter `backend/storage/images/` gecacht (kein Hotlinking der Quelle) und unter `GET /api/images/<external_id>.jpg` ausgeliefert; `image_url` behält zusätzlich die ursprüngliche Quell-URL als Fallback. Verwaiste Bilddateien werden nach jedem Lauf aufgeräumt.
+- Thumbnails werden heruntergeladen, per `sharp`/Lanczos3 um Faktor 2 hochskaliert (die Quelle liefert selbst keine höher aufgelöste Variante, siehe `docs/data-source.md`) und lokal unter `backend/storage/images/` gecacht (kein Hotlinking der Quelle) und unter `GET /api/images/<external_id>.jpg` ausgeliefert; `image_url` behält zusätzlich die ursprüngliche Quell-URL als Fallback. Verwaiste Bilddateien werden nach jedem Lauf aufgeräumt.
 - Jeder Lauf wird in `sync_runs` protokolliert (Zeitpunkt, neu/aktualisiert/entfernt, Fehler). Bei nicht erreichbarer Quelle bleibt die App mit dem zuletzt bekannten Datenstand funktionsfähig.
 - Manueller Trigger: `POST /api/admin/sync` (nur für Admins), liefert eine Zusammenfassung des Laufs zurück.
 
@@ -113,7 +129,7 @@ Nicht Teil eines eigenen Backend-Issues, aber notwendige Grundlage für das Fron
 
 | Endpunkt | Beschreibung |
 |---|---|
-| `GET /api/animals?limit=` | Aktive, nicht ausgeblendete, noch nicht gelikte Tiere in zufälliger Reihenfolge (Swipe-Stapel) |
+| `GET /api/animals?limit=` | Aktive, nicht ausgeblendete, noch nicht gelikte Tiere in zufälliger Reihenfolge (Swipe-Stapel). Ist im Profil eine Art-Präferenz gesetzt, werden nur Tiere dieser Art(en) geliefert; ohne Präferenz alle Arten |
 | `GET /api/animals/:id` | Detailansicht eines Tiers (auch `adopted`/`removed`, inkl. `isLiked`) |
 | `POST /api/animals/:id/likes` | Tier merken (idempotent) |
 | `DELETE /api/animals/:id/likes` | Tier aus Merkliste entfernen |

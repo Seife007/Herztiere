@@ -36,7 +36,10 @@ services:
     build: ./frontend
     restart: unless-stopped
     environment:
-      VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+      # Ziel des Vite-Dev-Server-Proxys (/api -> Backend, Issue #12) - läuft
+      # innerhalb dieses Containers, "localhost" würde daher auf sich selbst
+      # statt auf den Backend-Container zeigen.
+      BACKEND_URL: http://backend:3000
     ports:
       - "5173:5173"
     volumes:

@@ -1,5 +1,15 @@
 import { mkdir, readdir, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
+import sharp from 'sharp'
+
+// Faktor, um den das von der Quelle gelieferte Thumbnail (358x240px, siehe
+// docs/data-source.md) beim Caching hochskaliert wird (Issue #9). Die Quelle
+// liefert nachweislich keine höher aufgelöste Variante (recherchiert:
+// weder zusätzliche RSS-Felder noch Resize-Query-Parameter noch EXIF-Daten
+// liefern mehr Bilddetail) - Lanczos3-Upscaling erzeugt daher keine echten
+// Zusatzdetails, sondern nur glattere Kanten/weniger sichtbare Pixel auf
+// großen Bildschirmen (Nutzerentscheidung, Issue #9).
+const UPSCALE_FACTOR = 2
 
 // Eigenes Caching statt Hotlinking der Quelle (siehe Issue #3 / memory.md):
 // die App bleibt so unabhängig von Verfügbarkeit/Ladezeit von wien.gv.at.
@@ -20,6 +30,25 @@ export async function ensureImageStorageDir(): Promise<void> {
   await mkdir(imageStorageDir(), { recursive: true })
 }
 
+// Skaliert das Thumbnail per Lanczos3-Filter hoch (Issue #9). Schlägt die
+// Verarbeitung fehl (z. B. unerwartetes Format), werden die Original-Bytes
+// unverändert gespeichert - ein Problem hier darf den Sync-Lauf nicht
+// abbrechen, genau wie beim Download selbst.
+async function upscaleImage(bytes: Buffer): Promise<Buffer> {
+  try {
+    const image = sharp(bytes)
+    const { width, height } = await image.metadata()
+    if (!width || !height) return bytes
+
+    return await image
+      .resize({ width: width * UPSCALE_FACTOR, height: height * UPSCALE_FACTOR, kernel: 'lanczos3' })
+      .jpeg({ quality: 90 })
+      .toBuffer()
+  } catch {
+    return bytes
+  }
+}
+
 // Lädt das Thumbnail für ein Tier herunter und speichert es lokal. Gibt bei
 // Erfolg den servierten Pfad zurück, bei jedem Fehler `null` - ein einzelnes
 // fehlgeschlagenes Bild darf den gesamten Sync-Lauf nicht abbrechen.
@@ -37,8 +66,9 @@ export async function downloadAnimalImage(
     if (!response.ok) return null
 
     const bytes = Buffer.from(await response.arrayBuffer())
+    const upscaled = await upscaleImage(bytes)
     await ensureImageStorageDir()
-    await writeFile(path.join(imageStorageDir(), imageFileName(externalId)), bytes)
+    await writeFile(path.join(imageStorageDir(), imageFileName(externalId)), upscaled)
     return `${IMAGE_URL_PREFIX}/${imageFileName(externalId)}`
   } catch {
     return null

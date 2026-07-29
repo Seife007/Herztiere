@@ -6,7 +6,7 @@ export function AnimalCard({ animal }: { animal: Animal }) {
   const image = resolveImageUrl(animal.cachedImagePath ?? animal.imageUrl)
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden rounded-3xl bg-white shadow-xl">
+    <div className="flex h-full w-full flex-col overflow-hidden rounded-3xl bg-white">
       <div className="relative flex-1 bg-coral-100">
         {image ? (
           <img src={image} alt={animal.title} className="h-full w-full object-cover" draggable={false} />

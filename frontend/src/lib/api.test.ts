@@ -6,8 +6,8 @@ describe('resolveImageUrl', () => {
     expect(resolveImageUrl(null)).toBeNull()
   })
 
-  it('prefixes a relative backend path with the API base URL', () => {
-    expect(resolveImageUrl('/api/images/1.jpg')).toBe('http://localhost:3000/api/images/1.jpg')
+  it('leaves a relative backend path unchanged (resolved by the browser against the current origin)', () => {
+    expect(resolveImageUrl('/api/images/1.jpg')).toBe('/api/images/1.jpg')
   })
 
   it('leaves an already-absolute URL untouched', () => {

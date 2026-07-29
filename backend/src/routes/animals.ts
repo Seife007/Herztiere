@@ -13,7 +13,10 @@ animalsRouter.use(requireAuth)
 
 animalsRouter.get('/', async (req, res) => {
   const limit = Math.min(Number(req.query.limit) || 50, 200)
-  res.json({ animals: await findAnimalsForSwiping(req.user!.id, limit) })
+  const speciesInterest = Array.isArray(req.user!.preferences.speciesInterest)
+    ? (req.user!.preferences.speciesInterest as string[])
+    : []
+  res.json({ animals: await findAnimalsForSwiping(req.user!.id, limit, speciesInterest) })
 })
 
 animalsRouter.get('/:id', async (req, res) => {

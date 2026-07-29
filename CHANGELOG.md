@@ -60,6 +60,11 @@ Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ### Changed
 - `CLAUDE.md` um projektspezifische Arbeitsanweisungen erweitert: Issue-Workflow über die GitHub-API (PAT statt `gh` CLI), Vorgehen zum Testen ohne lokal installiertes Docker (temporäre isolierte Postgres-Instanz), Pflicht zu Unit-Tests für wichtige/nicht-triviale Logik (Backend und Frontend).
+- Issue #9: Tierbilder werden beim Caching jetzt per `sharp`/Lanczos3 um Faktor 2 hochskaliert (`imageCache.ts`), da die Datenquelle nachweislich keine höher aufgelöste Variante liefert (siehe `docs/data-source.md`) – erzeugt keine echten Zusatzdetails, reduziert aber sichtbare Pixelbildung auf großen Bildschirmen.
 
 ### Fixed
 - Backend-`npm test` zählte nach einem lokalen `npm run build` jeden Test doppelt, weil vitest ohne Exclude-Config auch die nach `dist/` kompilierten Test-Dateien ausführte (`backend/vitest.config.ts` ergänzt).
+- Issue #10: Tierkarte in der Swipe-Ansicht (`AnimalCard.tsx`) hatte durch `shadow-xl` einen asymmetrischen Schatten (nur unten sichtbar) – Schatten entfernt.
+- Issue #8: `GET /api/animals` (Swipe-Stapel) berücksichtigte die im Profil hinterlegte Art-Präferenz (`speciesInterest`) nicht und zeigte immer Tiere aller Arten – `findAnimalsForSwiping()` filtert jetzt nach `category` (bzw. deren Admin-Override), sofern mindestens eine Art ausgewählt ist; ohne Präferenz weiterhin alle Arten.
+- Issue #12: Frontend funktionierte nur zuverlässig über die eine IP/den Host, für den `VITE_API_URL` fest hinterlegt war – `api.ts` nutzt jetzt standardmäßig relative `/api/...`-Pfade, die vom bereits vorhandenen, aber ungenutzten Vite-Proxy ans Backend weitergereicht werden. Funktioniert dadurch unabhängig von der aufrufenden IP/dem Host (getestet über `localhost`, LAN-IP und Tailscale-IP ohne Änderung an Env-Variablen), löst nebenbei die SameSite-Cookie-Problematik bei Cross-Host-Zugriff und macht es möglich, ausschließlich den Frontend-Port nach außen freizugeben.
+- Issue #11: Frontend-Dev-Server kann jetzt optional per HTTPS laufen – `vite.config.ts` aktiviert automatisch HTTPS, sobald ein per `mkcert` erzeugtes Zertifikat unter `frontend/certs/` liegt (siehe README). Backend/Proxy-Hop bleiben bewusst HTTP (kein Mixed-Content-Problem dank Issue #12).
