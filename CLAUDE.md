@@ -6,7 +6,7 @@ Anweisungen für Claude Code in diesem Projekt.
 
 "herztiere" – Swipe-App über den offenen Datensatz "Fundtiere Wien" (data.gv.at, Stadt Wien, CC BY 4.0). Details zu Zweck, Tech-Stack und Setup: [README.md](./README.md). Details zur Datenquelle: [docs/data-source.md](./docs/data-source.md).
 
-Der Arbeitsplan liegt als 7 GitHub-Issues im Repo `Seife007/Herztiere` vor (Issue #1–#7), sie bauen z. T. aufeinander auf (siehe Abhängigkeiten in den jeweiligen Issue-Bodies). Aktueller Stand: siehe `memory.md`, Abschnitt "Projektstatus".
+Der ursprüngliche Arbeitsplan lag als 7 GitHub-Issues im Repo `Seife007/Herztiere` vor (Issue #1–#7), sie bauen z. T. aufeinander auf (siehe Abhängigkeiten in den jeweiligen Issue-Bodies). Seit der Konvention "Issue-Pflicht: erst Issue, dann Umsetzung" (siehe unten) kommen fortlaufend weitere Issues für jede neue Änderung hinzu, unabhängig von der Größe. Aktueller Stand: siehe `memory.md`, Abschnitt "Projektstatus".
 
 ## Kontext beim Start
 
@@ -82,6 +82,18 @@ rm -rf "$DATADIR"
 ```
 
 Nach jedem Test-Durchlauf aufräumen (Prozesse beenden, `$DATADIR` löschen, Scratch-Dateien entfernen). Dieses Vorgehen wurde für Issue #1 (Migration) und Issue #2 (kompletter Auth-Flow: Register/Login/Reset/Self-Delete/Rate-Limit) erfolgreich genutzt.
+
+**Vor dem Aufsetzen einer neuen temporären Umgebung erst prüfen, ob Backend/Frontend bereits als Dauerprozess laufen** (`ps aux | grep -E "node|vite|postgres"`) – in mehreren Sessions liefen beide bereits aus einer früheren Session weiter (inkl. einer eigenen temporären Postgres-Instanz im Scratchpad einer *anderen* Session-ID, siehe "Bekannte Probleme" in `memory.md`). In diesem Fall direkt gegen die laufenden Prozesse testen statt eine zusätzliche Umgebung hochzufahren.
+
+## Live-Browser-Tests (Playwright)
+
+Für Frontend-Flows (Login, Swipe, Merkliste, Admin-Bereich, …), die sich nicht sinnvoll als reiner Unit-Test abbilden lassen, live per Playwright gegen laufendes Backend + Frontend verifizieren, nicht nur `npm run build`/`npm test` als ausreichend ansehen:
+
+- Playwright ist **keine** Projekt-Dependency (weder `backend/` noch `frontend/`) – stattdessen in einem Scratch-Verzeichnis ad hoc installieren: `npm init -y && npm install playwright --no-save`.
+- Die von `npx playwright install` gebündelten Chromium-Builds werden auf diesem Debian-11-x64-System nicht unterstützt, `chromium-cli` ist nicht installiert. Stattdessen den vorhandenen System-Chromium nutzen: `chromium.launch({ executablePath: '/usr/bin/chromium', args: ['--no-sandbox', '--disable-dev-shm-usage'] })`.
+- Läuft das Frontend per HTTPS (`mkcert`-Zertifikat vorhanden, siehe Issue #11/README), zusätzlich `ignoreHTTPSErrors: true` beim `browser.newContext(...)` setzen, sonst schlagen alle Navigationen fehl.
+- Für Flows, die einen eingeloggten Nutzer brauchen: eigenen Wegwerf-Testaccount registrieren (`*-test-${Date.now()}@example.com`) und am Ende des Skripts wieder per Self-Service löschen (`/konto` → "Konto löschen" → "Ja, endgültig löschen") – kein Datenmüll in der (ggf. geteilten) DB hinterlassen.
+- Scratch-Verzeichnis samt `node_modules` nach dem Testlauf wieder löschen.
 
 ## Unit-Tests
 

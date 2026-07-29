@@ -139,7 +139,11 @@ Admin-Overrides (`overrides`-JSONB, Issue #5) werden beim Ausliefern automatisch
 
 ## Frontend (Issue #4)
 
-React (Vite) + TypeScript + Tailwind + `react-router-dom` + `framer-motion`. Öffentlicher Bereich (Landing, Login, Registrierung inkl. Präferenzen-Fragebogen, Passwort vergessen/zurücksetzen) und geschützter Bereich (Swipe-Ansicht mit Wisch-/Button-Bedienung, Merkliste mit Statusanzeige für nicht mehr verfügbare Tiere, Tierdetailseite, Kontoverwaltung). Mobile-first gestaltet; Auth-Status läuft komplett über das httpOnly-Cookie (`credentials: 'include'`), es wird kein Token im Frontend gespeichert.
+React (Vite) + TypeScript + Tailwind + `react-router-dom` + `framer-motion`. Öffentlicher Bereich (Landing Page für Gäste, Login, Registrierung inkl. Präferenzen-Fragebogen, Passwort vergessen/zurücksetzen) und geschützter Bereich (Swipe-Ansicht mit Wisch-/Button-Bedienung, Merkliste mit Statusanzeige für nicht mehr verfügbare Tiere, Tierdetailseite, Kontoverwaltung). Mobile-first gestaltet; Auth-Status läuft komplett über das httpOnly-Cookie (`credentials: 'include'`), es wird kein Token im Frontend gespeichert.
+
+**Startseite je nach Login-Status (Issue #13):** `/` zeigt nicht eingeloggten Nutzer:innen die Landing Page mit Registrieren-/Login-CTAs; bereits eingeloggte Nutzer:innen sehen stattdessen eine eigene Startseite (Begrüßung, Merkliste-Kurzstatus, Schnellzugriff auf Entdecken/Merkliste/Konto/Admin). `/registrieren`, `/login` und `/passwort-vergessen` leiten eingeloggte Nutzer:innen automatisch auf `/entdecken` um (`/reset-password` bleibt bewusst erreichbar, da der Reset-Flow über den Token läuft, unabhängig vom Login-Status der aktuellen Session).
+
+**Entfernen aus der Merkliste (Issue #14/#15):** Das ✕ auf einer Tierkarte in der Merkliste fragt vor dem endgültigen Entfernen nach ("Bist du sicher, dass du dieses Tier entfernen willst?", Bestätigen/Abbrechen als vollbreite, untereinander angeordnete Buttons direkt auf der Karte).
 
 ## Admin-Bereich (Issue #5)
 
@@ -194,4 +198,4 @@ herztiere/
 
 ## Entwicklung
 
-Der Fortschritt und offene Punkte werden in [`memory.md`](./memory.md) festgehalten. Änderungen werden in [`CHANGELOG.md`](./CHANGELOG.md) dokumentiert. Die GitHub-Issues im Repo bilden den Arbeitsplan (Issue #1–#7).
+Der Fortschritt und offene Punkte werden in [`memory.md`](./memory.md) festgehalten. Änderungen werden in [`CHANGELOG.md`](./CHANGELOG.md) dokumentiert. Die GitHub-Issues im Repo bilden den Arbeitsplan – ursprünglich 7 Issues (#1–#7), seither laufend um weitere Bugfixes/Features ergänzt (jede Änderung bekommt ein eigenes Issue, siehe `CLAUDE.md`).

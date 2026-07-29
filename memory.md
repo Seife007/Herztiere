@@ -4,9 +4,9 @@ Dieses File ist das Gedächtnis für die Weiterarbeit an diesem Projekt. Vor dem
 
 ## Projektstatus
 
-- Phase: Alle 12 bisherigen Issues (#1–#12) abgearbeitet und geschlossen, keine offenen Issues auf GitHub.
+- Phase: Alle bisherigen Issues (#1–#15) abgearbeitet und geschlossen, keine offenen Issues auf GitHub. Ursprünglicher Arbeitsplan war 7 Issues (#1–#7); seit der "Issue-Pflicht"-Konvention (siehe `CLAUDE.md`) kommen laufend weitere Issues für jeden Bugfix/jedes Feature hinzu, unabhängig von der Größe.
 - Tech-Stack: React (Vite) + TypeScript + Tailwind CSS v4 + react-router-dom + framer-motion (Frontend), Node.js + Express + TypeScript (Backend), PostgreSQL, docker-compose, node-cron (Scheduler), fast-xml-parser (RSS)
-- Zweck der App: "Tinder für Fundtiere" – Swipe-App über den Datensatz "Fundtiere Wien" (data.gv.at, Stadt Wien, CC BY 4.0). Registrierung, Merkliste, Admin-Bereich für Nutzer- und Tierverwaltung. Arbeitsplan liegt als 7 GitHub-Issues im Repo `Seife007/Herztiere` vor (Issue #1–#7, siehe TaskList in dieser Session für Mapping).
+- Zweck der App: "Tinder für Fundtiere" – Swipe-App über den Datensatz "Fundtiere Wien" (data.gv.at, Stadt Wien, CC BY 4.0). Registrierung, Swipe-Ansicht mit eigener Startseite für eingeloggte Nutzer (Issue #13), Merkliste mit Bestätigung vor dem Entfernen (Issue #14/#15), Admin-Bereich für Nutzer- und Tierverwaltung.
 
 ## Zuletzt erledigt
 
