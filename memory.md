@@ -124,6 +124,7 @@ Dieses File ist das Gedächtnis für die Weiterarbeit an diesem Projekt. Vor dem
   - Dabei gefunden und behoben: das ✕ war per `opacity-0 group-hover:opacity-100` nur bei Hover sichtbar – auf Touch-Geräten (kein Hover) dadurch praktisch unbedienbar. Jetzt auf schmalen Viewports (`sm:`-Breakpoint) dauerhaft sichtbar, ab `sm:` weiterhin nur bei Hover (Desktop-Optik unverändert).
   - Unit-Tests (Backend 42, Frontend 17) weiterhin grün, `npm run build` grün. **Live per Playwright verifiziert**: Tier merken, X klicken → Popup erscheint, Abbrechen → Tier bleibt in der Merkliste, X klicken → Entfernen → Tier verschwindet, Leerzustand wird angezeigt. Test-Account danach per Self-Service gelöscht.
   - Issue #14 kommentiert, Checkliste abgehakt, geschlossen.
+- 2026-07-29: Issue #15 angelegt und direkt umgesetzt (Bug: Buttons im Merkliste-Bestätigungs-Overlay nebeneinander abgeschnitten): `AnimalListCard.tsx` – "Entfernen"/"Abbrechen" im Bestätigungs-Overlay aus Issue #14 standen per `flex gap-2` nebeneinander und wurden auf schmalen Karten (Merkliste-Grid `grid-cols-2` ab Mobile) abgeschnitten. Umgestellt auf `flex flex-col`, beide Buttons `w-full`. Unit-Tests (42/17) und Build weiterhin grün. **Live per Playwright bei 360px-Viewport verifiziert**: beide Buttons per Bounding-Box vollbreit, gleich breit (gestapelt statt nebeneinander), vollständig innerhalb der Kartenbreite. Issue #15 kommentiert, Checkliste abgehakt, geschlossen.
 
 ## Offen / nächste Schritte
 

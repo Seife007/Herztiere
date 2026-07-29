@@ -55,14 +55,14 @@ export function AnimalListCard({ animal, onUnlike }: { animal: Animal; onUnlike?
           <p className="font-semibold text-stone-800">
             Bist du sicher, dass du dieses Tier entfernen willst?
           </p>
-          <div className="flex gap-2">
+          <div className="flex w-full flex-col gap-2">
             <button
               onClick={(event) => {
                 event.preventDefault()
                 setConfirmingRemove(false)
                 onUnlike?.()
               }}
-              className="rounded-full bg-heart-500 px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+              className="w-full rounded-full bg-heart-500 px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
             >
               Entfernen
             </button>
@@ -71,7 +71,7 @@ export function AnimalListCard({ animal, onUnlike }: { animal: Animal; onUnlike?
                 event.preventDefault()
                 setConfirmingRemove(false)
               }}
-              className="rounded-full border-2 border-stone-200 px-4 py-2 text-sm font-semibold text-stone-600 hover:bg-stone-50"
+              className="w-full rounded-full border-2 border-stone-200 px-4 py-2 text-sm font-semibold text-stone-600 hover:bg-stone-50"
             >
               Abbrechen
             </button>
