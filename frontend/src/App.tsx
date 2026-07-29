@@ -1,9 +1,10 @@
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { GuestRoute } from './components/GuestRoute'
 import { AdminRoute } from './components/AdminRoute'
 import { AdminLayout } from './components/AdminLayout'
-import { Landing } from './routes/Landing'
+import { Home } from './routes/Home'
 import { Register } from './routes/Register'
 import { Login } from './routes/Login'
 import { ForgotPassword } from './routes/ForgotPassword'
@@ -33,10 +34,31 @@ function App() {
   return (
     <Routes>
       <Route element={<PublicLayout />}>
-        <Route path="/" element={<Landing />} />
-        <Route path="/registrieren" element={<Register />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/passwort-vergessen" element={<ForgotPassword />} />
+        <Route path="/" element={<Home />} />
+        <Route
+          path="/registrieren"
+          element={
+            <GuestRoute>
+              <Register />
+            </GuestRoute>
+          }
+        />
+        <Route
+          path="/login"
+          element={
+            <GuestRoute>
+              <Login />
+            </GuestRoute>
+          }
+        />
+        <Route
+          path="/passwort-vergessen"
+          element={
+            <GuestRoute>
+              <ForgotPassword />
+            </GuestRoute>
+          }
+        />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route
           path="/entdecken"
