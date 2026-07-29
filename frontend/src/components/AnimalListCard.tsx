@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { resolveImageUrl } from '../lib/api'
 import { animalSubtitle, categoryEmoji, statusLabel } from '../lib/animalLabels'
@@ -11,6 +12,7 @@ const STATUS_BADGE_STYLES: Record<Animal['status'], string> = {
 
 export function AnimalListCard({ animal, onUnlike }: { animal: Animal; onUnlike?: () => void }) {
   const image = resolveImageUrl(animal.cachedImagePath ?? animal.imageUrl)
+  const [confirmingRemove, setConfirmingRemove] = useState(false)
 
   return (
     <div className="group relative overflow-hidden rounded-3xl bg-white shadow-md transition-shadow hover:shadow-lg">
@@ -39,11 +41,42 @@ export function AnimalListCard({ animal, onUnlike }: { animal: Animal; onUnlike?
       {onUnlike && (
         <button
           aria-label="Aus Merkliste entfernen"
-          onClick={onUnlike}
-          className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-heart-500 shadow-sm opacity-0 transition-opacity group-hover:opacity-100"
+          onClick={(event) => {
+            event.preventDefault()
+            setConfirmingRemove(true)
+          }}
+          className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-heart-500 shadow-sm opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
         >
           ✕
         </button>
+      )}
+      {confirmingRemove && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-3xl bg-white/95 p-4 text-center">
+          <p className="font-semibold text-stone-800">
+            Bist du sicher, dass du dieses Tier entfernen willst?
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={(event) => {
+                event.preventDefault()
+                setConfirmingRemove(false)
+                onUnlike?.()
+              }}
+              className="rounded-full bg-heart-500 px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+            >
+              Entfernen
+            </button>
+            <button
+              onClick={(event) => {
+                event.preventDefault()
+                setConfirmingRemove(false)
+              }}
+              className="rounded-full border-2 border-stone-200 px-4 py-2 text-sm font-semibold text-stone-600 hover:bg-stone-50"
+            >
+              Abbrechen
+            </button>
+          </div>
+        </div>
       )}
     </div>
   )

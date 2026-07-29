@@ -57,6 +57,7 @@ Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
   - DSGVO-Datenexport: `GET /api/users/me/export` liefert Konto- und Merklisten-Daten als JSON, im Kontobereich per Button als Datei herunterladbar (Auskunftsrecht + Datenübertragbarkeit, Art. 15/20 DSGVO).
   - Bewusste Entscheidung gegen einen Cookie-Consent-Banner dokumentiert (nur ein technisch notwendiges Auth-Cookie, keine Analytics/Tracking).
   - Live-E2E-Test: Footer-Links (eingeloggt/nicht eingeloggt), alle drei neuen Seiten erreichbar, Datenexport-Download mit korrektem Inhalt.
+- Issue #14: Das ✕ zum Entfernen eines Tiers aus der Merkliste (`AnimalListCard.tsx`) fragt jetzt vor dem endgültigen Entfernen nach ("Bist du sicher, dass du dieses Tier entfernen willst?", Bestätigen/Abbrechen als Overlay auf der Karte). ✕ ist auf schmalen Viewports (Touch, kein Hover) jetzt dauerhaft sichtbar statt nur bei `:hover`.
 
 ### Changed
 - `CLAUDE.md` um projektspezifische Arbeitsanweisungen erweitert: Issue-Workflow über die GitHub-API (PAT statt `gh` CLI), Vorgehen zum Testen ohne lokal installiertes Docker (temporäre isolierte Postgres-Instanz), Pflicht zu Unit-Tests für wichtige/nicht-triviale Logik (Backend und Frontend).

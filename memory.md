@@ -119,6 +119,11 @@ Dieses File ist das Gedächtnis für die Weiterarbeit an diesem Projekt. Vor dem
   - `Layout.tsx` (Nav) musste nicht angepasst werden – zeigte schon vorher nur für den jeweiligen Auth-Status passende Links.
   - Unit-Tests (Backend 42, Frontend 17) weiterhin grün, `npm run build` grün. **Live per Playwright verifiziert** (System-Chromium, laufendes Backend/Frontend + temporäre Postgres-Instanz aus vorheriger Session, siehe "Bekannte Probleme"): Gast sieht Landing-CTAs auf `/`, frisch registrierter/eingeloggter Nutzer sieht auf `/` die neue `LoggedInHome`-Ansicht ohne Registrieren/Login-Links, direkter Aufruf von `/login`/`/registrieren`/`/passwort-vergessen` leitet eingeloggt korrekt auf `/entdecken` um. Test-Account danach per Self-Service-Löschung wieder entfernt (kein Datenmüll).
   - Issue #13 kommentiert, Checkliste abgehakt, geschlossen.
+- 2026-07-29: Issue #14 angelegt und direkt umgesetzt (Bestätigungsdialog vor Entfernen aus der Merkliste):
+  - `AnimalListCard.tsx`: Klick auf das ✕ entfernt das Tier nicht mehr sofort, sondern zeigt ein Overlay auf der Karte ("Bist du sicher, dass du dieses Tier entfernen willst?" + Bestätigen/Abbrechen); `onUnlike` (die eigentliche `DELETE /api/animals/:id/likes`-Aktion aus `Wishlist.tsx`) wird erst nach Bestätigen ausgelöst.
+  - Dabei gefunden und behoben: das ✕ war per `opacity-0 group-hover:opacity-100` nur bei Hover sichtbar – auf Touch-Geräten (kein Hover) dadurch praktisch unbedienbar. Jetzt auf schmalen Viewports (`sm:`-Breakpoint) dauerhaft sichtbar, ab `sm:` weiterhin nur bei Hover (Desktop-Optik unverändert).
+  - Unit-Tests (Backend 42, Frontend 17) weiterhin grün, `npm run build` grün. **Live per Playwright verifiziert**: Tier merken, X klicken → Popup erscheint, Abbrechen → Tier bleibt in der Merkliste, X klicken → Entfernen → Tier verschwindet, Leerzustand wird angezeigt. Test-Account danach per Self-Service gelöscht.
+  - Issue #14 kommentiert, Checkliste abgehakt, geschlossen.
 
 ## Offen / nächste Schritte
 
