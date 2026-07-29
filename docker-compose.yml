@@ -27,6 +27,7 @@ services:
     volumes:
       - ./backend:/app
       - /app/node_modules
+      - herztiere_images_data:/app/storage/images
     depends_on:
       db:
         condition: service_healthy
@@ -46,3 +47,4 @@ services:
 
 volumes:
   herztiere_db_data:
+  herztiere_images_data:

@@ -68,13 +68,68 @@ Authentifizierung läuft über ein JWT in einem httpOnly-Cookie (kein Zugriff pe
 
 Passwörter werden mit bcrypt gehasht (12 Rounds), Login/Registrierung/Passwort-Reset sind rate-limitiert (20 Requests/15 min pro IP). Ein echter E-Mail-Versand für den Passwort-Reset-Link ist noch nicht angebunden – der Link wird aktuell auf der Backend-Konsole geloggt.
 
+## Sync-Crawler (Issue #3)
+
+Ein Scheduler (`node-cron`) synchronisiert die Datenbank 4x täglich (00/06/12/18 Uhr) mit dem Fundtiere-Feed:
+
+- Neue Einträge werden angelegt, bestehende aktualisiert, im Feed nicht mehr vorhandene aktive Einträge auf `status = 'removed'` gesetzt (kein Hard-Delete, wegen bestehender Merklisten-Referenzen). Taucht ein zuvor entferntes Tier wieder auf, wird es reaktiviert; ein manuell auf `adopted` gesetztes Tier wird vom Sync nie automatisch verändert.
+- Admin-Anpassungen (`overrides`/`manually_edited`/`is_hidden`, Issue #5) werden von den Sync-Schreibzugriffen nie berührt.
+- Thumbnails werden heruntergeladen und lokal unter `backend/storage/images/` gecacht (kein Hotlinking der Quelle) und unter `GET /api/images/<external_id>.jpg` ausgeliefert; `image_url` behält zusätzlich die ursprüngliche Quell-URL als Fallback. Verwaiste Bilddateien werden nach jedem Lauf aufgeräumt.
+- Jeder Lauf wird in `sync_runs` protokolliert (Zeitpunkt, neu/aktualisiert/entfernt, Fehler). Bei nicht erreichbarer Quelle bleibt die App mit dem zuletzt bekannten Datenstand funktionsfähig.
+- Manueller Trigger: `POST /api/admin/sync` (nur für Admins), liefert eine Zusammenfassung des Laufs zurück.
+
+## Animals- & Likes-API (Grundlage für Issue #4)
+
+Nicht Teil eines eigenen Backend-Issues, aber notwendige Grundlage für das Frontend aus Issue #4. Alle Endpunkte erfordern Login.
+
+| Endpunkt | Beschreibung |
+|---|---|
+| `GET /api/animals?limit=` | Aktive, nicht ausgeblendete, noch nicht gelikte Tiere in zufälliger Reihenfolge (Swipe-Stapel) |
+| `GET /api/animals/:id` | Detailansicht eines Tiers (auch `adopted`/`removed`, inkl. `isLiked`) |
+| `POST /api/animals/:id/likes` | Tier merken (idempotent) |
+| `DELETE /api/animals/:id/likes` | Tier aus Merkliste entfernen |
+| `GET /api/users/me/likes` | Merkliste des angemeldeten Users |
+
+Admin-Overrides (`overrides`-JSONB, Issue #5) werden beim Ausliefern automatisch auf die Basisfelder gemerged.
+
+## Frontend (Issue #4)
+
+React (Vite) + TypeScript + Tailwind + `react-router-dom` + `framer-motion`. Öffentlicher Bereich (Landing, Login, Registrierung inkl. Präferenzen-Fragebogen, Passwort vergessen/zurücksetzen) und geschützter Bereich (Swipe-Ansicht mit Wisch-/Button-Bedienung, Merkliste mit Statusanzeige für nicht mehr verfügbare Tiere, Tierdetailseite, Kontoverwaltung). Mobile-first gestaltet; Auth-Status läuft komplett über das httpOnly-Cookie (`credentials: 'include'`), es wird kein Token im Frontend gespeichert.
+
+## Admin-Bereich (Issue #5)
+
+Geschützt unter `/admin` (nur `role = admin`, sonst Hinweis "Kein Zugriff"), eigenes schlichtes Dashboard-Layout unabhängig vom öffentlichen Design. Alle Backend-Endpunkte erfordern `requireAuth` + `requireAdmin`.
+
+| Endpunkt | Beschreibung |
+|---|---|
+| `GET /api/admin/users` | Liste mit `search`/`role`/`status`-Filtern + Pagination (`page`/`pageSize`) |
+| `GET /api/admin/users/:id` | Detail inkl. Like-Anzahl |
+| `PATCH /api/admin/users/:id/block` | `{ isBlocked }`, protokolliert im Audit-Log |
+| `PATCH /api/admin/users/:id/role` | `{ role }`; blockt Degradierung des letzten verbleibenden Admins (400) |
+| `POST /api/admin/users/:id/reset-password` | Löst Passwort-Reset aus (Admin sieht nie das Klartext-Passwort, Link wird geloggt) |
+| `DELETE /api/admin/users/:id` | Harter Delete, Audit-Log-Eintrag vor dem Löschen |
+| `GET /api/admin/animals` | Liste mit `status`/`category`/`search`/`syncedBefore`-Filtern + Pagination |
+| `GET /api/admin/animals/:id` | Detail inkl. Rohdaten (`externalId`, `manuallyEdited`, `isHidden`, `lastSyncedAt`, `overrides`) |
+| `PATCH /api/admin/animals/:id` | `{ overrides, isHidden }` – ersetzt das komplette Override-Objekt, setzt `manuallyEdited` automatisch |
+| `GET /api/admin/sync-runs` | Letzte Sync-Läufe (`limit`, Default 20) |
+| `POST /api/admin/sync` | Manueller Sync-Trigger (bereits aus Issue #3) |
+
+Sicherheitsrelevante Aktionen (Sperren/Entsperren, Rolle ändern, Löschen, Passwort-Reset, Tier-Override) werden in `audit_log` protokolliert. Die Schutzregel gegen die Selbst-Degradierung des letzten Admins ist als reine Funktion (`blocksLastAdminDemotion`) unit-getestet.
+
 ## Projektstruktur
 
 ```
 herztiere/
 ├── backend/          Node/Express/TS API
-│   └── src/db/migrations/   SQL-Migrationen (Reihenfolge = Dateiname)
+│   ├── src/db/migrations/   SQL-Migrationen (Reihenfolge = Dateiname)
+│   └── storage/images/      Lokal gecachte Fundtier-Thumbnails (Issue #3, nicht im Git)
 ├── frontend/         React/Vite/TS/Tailwind SPA
+│   └── src/
+│       ├── routes/          Seiten (Landing, Auth, Swipe, Merkliste, Tierdetail, Konto)
+│       │   └── admin/       Admin-Bereich (Nutzer-/Tierverwaltung, Sync-Übersicht)
+│       ├── components/      Swipe-Deck, Karten, Layout, AdminLayout, geteilte UI
+│       ├── context/         AuthContext (lädt/hält den angemeldeten User)
+│       └── lib/             API-Client, Typen, Label-Helfer
 ├── docs/
 │   └── data-source.md       Recherche zur Datenquelle
 ├── docker-compose.yml

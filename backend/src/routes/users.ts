@@ -4,6 +4,7 @@ import { requireAuth } from '../middleware/auth.js'
 import { updatePreferencesSchema } from '../validation/auth.js'
 import { logAudit } from '../services/audit.js'
 import { findUserById } from '../services/users.js'
+import { findLikedAnimals } from '../services/animals.js'
 import { AUTH_COOKIE_NAME } from '../services/jwt.js'
 
 export const usersRouter = Router()
@@ -26,6 +27,10 @@ usersRouter.patch('/me', async (req, res) => {
   ])
 
   res.json({ user: await findUserById(req.user!.id) })
+})
+
+usersRouter.get('/me/likes', async (req, res) => {
+  res.json({ animals: await findLikedAnimals(req.user!.id) })
 })
 
 // Self-Service-Löschung (DSGVO-Löschungsrecht, siehe Issue #7). Harter Delete,
